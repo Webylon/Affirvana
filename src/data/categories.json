@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Homes",
+    "icon": "Home",
+    "description": "Luxury Properties"
+  },
+  {
+    "name": "Travel",
+    "icon": "Plane",
+    "description": "Exclusive Destinations"
+  },
+  {
+    "name": "Cars",
+    "icon": "Car",
+    "description": "Premium Vehicles"
+  },
+  {
+    "name": "Boats",
+    "icon": "Ship",
+    "description": "Luxury Yachts"
+  },
+  {
+    "name": "Fashion",
+    "icon": "Shirt",
+    "description": "Designer Apparel"
+  },
+  {
+    "name": "Jewelry",
+    "icon": "Diamond",
+    "description": "Fine Jewelry"
+  },
+  {
+    "name": "Watches",
+    "icon": "Watch",
+    "description": "Luxury Timepieces"
+  },
+  {
+    "name": "Gadgets",
+    "icon": "Smartphone",
+    "description": "High-end Tech"
+  },
+  {
+    "name": "Art",
+    "icon": "Palette",
+    "description": "Fine Art & Collectibles"
+  },
+  {
+    "name": "Experiences",
+    "icon": "Trophy",
+    "description": "Exclusive Events"
+  }
+]
