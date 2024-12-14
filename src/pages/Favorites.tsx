@@ -1,39 +1,53 @@
 import React from 'react';
 import { useFavorites } from '../context/FavoritesContext';
-import ItemGrid from '../components/ItemGrid';
-import { LuxuryItem } from '../types';
+import LuxuryItemCard from '../components/LuxuryItemCard';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const Favorites: React.FC = () => {
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, isLoading, error } = useFavorites();
 
-  const handleAddToCart = (item: LuxuryItem) => {
-    console.log('Added to cart:', item);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
-  const handleToggleFavorite = (itemId: string) => {
-    const item = favorites.find(i => i.id === itemId);
-    if (item) {
-      toggleFavorite(item);
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900">Error</h3>
+          <p className="mt-1 text-sm text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900">No favorites yet</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Start adding items to your favorites collection!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Your Favorites</h2>
-      {favorites.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">You haven't saved any items to your favorites yet.</p>
+    <div className="bg-white">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Your Favorites</h2>
+        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+          {favorites.map((item) => (
+            <LuxuryItemCard key={item.id} item={item} />
+          ))}
         </div>
-      ) : (
-        <ItemGrid
-          items={favorites}
-          onAddToCart={handleAddToCart}
-          onToggleFavorite={handleToggleFavorite}
-          onLoadMore={() => {}}
-          hasMore={false}
-          loading={false}
-        />
-      )}
+      </div>
     </div>
   );
 };

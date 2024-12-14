@@ -59,7 +59,11 @@ export const luxuryItemApi = {
   async getAll() {
     const { data, error } = await supabase
       .from('luxury_items')
-      .select('*, categories(*)');
+      .select(`
+        *,
+        categories (*)
+      `)
+      .order('title');
     if (error) throw error;
     return data;
   },
@@ -67,7 +71,10 @@ export const luxuryItemApi = {
   async getById(id: string) {
     const { data, error } = await supabase
       .from('luxury_items')
-      .select('*, categories(*)')
+      .select(`
+        *,
+        categories (*)
+      `)
       .eq('id', id)
       .single();
     if (error) throw error;
@@ -77,7 +84,10 @@ export const luxuryItemApi = {
   async getByCategory(categoryId: string) {
     const { data, error } = await supabase
       .from('luxury_items')
-      .select('*, categories(*)')
+      .select(`
+        *,
+        categories (*)
+      `)
       .eq('category_id', categoryId);
     if (error) throw error;
     return data;

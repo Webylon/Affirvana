@@ -1,6 +1,7 @@
 import { AuthError } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { AuthResponse, User } from '../../types/auth';
+import toast from 'react-hot-toast';
 
 const handleAuthError = (error: AuthError): string => {
   switch (error.message) {
@@ -47,30 +48,17 @@ const createOrUpdateProfile = async (userId: string, email: string, name?: strin
     // If no profile exists, create one with the provided name or fallback
     const { data: newProfile, error: createError } = await supabase
       .from('users')
-      .upsert(
-        {
-          id: userId,
-          email,
-          name: name || email.split('@')[0], // Fallback to email username if no name provided
-          currency: 'USD',
-          notifications: true,
-          theme: 'light',
-        },
-        { onConflict: 'id' }
-      )
+      .upsert({
+        id: userId,
+        email,
+        name: name || email.split('@')[0], // Use part of email as name if not provided
+        created_at: new Date().toISOString(),
+      })
       .select()
       .single();
 
-    if (createError) {
-      console.error('Error creating user profile:', createError);
-      throw new Error('Failed to create user profile');
-    }
-
-    if (!newProfile) {
-      throw new Error('Failed to create user profile');
-    }
-
-    return newProfile;
+    if (createError) throw createError;
+    return newProfile!;
   } catch (error) {
     console.error('Error in createOrUpdateProfile:', error);
     throw error;
@@ -79,25 +67,17 @@ const createOrUpdateProfile = async (userId: string, email: string, name?: strin
 
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-    if (!session?.user) return null;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-    try {
-      // Get the user's metadata which might contain the name
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-      // Pass the name from auth metadata if available
-      return await createOrUpdateProfile(
-        session.user.id,
-        session.user.email!,
-        authUser?.user_metadata?.name
-      );
-    } catch (error) {
-      console.error('Error getting/creating profile:', error);
-      return null;
-    }
+    if (error) throw error;
+    return profile;
   } catch (error) {
     console.error('Error getting current user:', error);
     return null;
@@ -106,85 +86,75 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
 export const signIn = async (email: string, password: string): Promise<AuthResponse> => {
   try {
-    const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (authError) throw authError;
-    if (!session) throw new Error('No session returned after sign in');
-
-    try {
-      // Get the user's metadata which might contain the name
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const profile = await createOrUpdateProfile(
-        session.user.id,
-        email,
-        authUser?.user_metadata?.name
-      );
-
-      return {
-        user: profile,
-        session,
-      };
-    } catch (error) {
-      console.error('Error getting/creating profile:', error);
-      throw new Error('Failed to fetch or create user profile');
+    if (error) {
+      const errorMessage = handleAuthError(error);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
+
+    if (!data.user) {
+      const errorMessage = 'No user data returned from authentication';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Get or create user profile
+    const profile = await createOrUpdateProfile(data.user.id, data.user.email!);
+
+    toast.success('Successfully signed in!');
+    return {
+      user: profile,
+      session: data.session,
+    };
   } catch (error) {
-    console.error('Error signing in:', error);
-    if (error instanceof AuthError) {
-      throw new Error(handleAuthError(error));
-    }
+    console.error('Error in signIn:', error);
     throw error;
   }
 };
 
 export const signUp = async (email: string, password: string, name: string): Promise<AuthResponse> => {
   try {
-    const { data: { session }, error: authError } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          name: name, // Store name in auth metadata
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
-    if (authError) throw authError;
-    if (!session) {
-      // If no session, the user needs to confirm their email
-      return {
-        user: null,
-        session: null,
-        error: 'Please check your email to confirm your account',
-      };
+    if (error) {
+      const errorMessage = handleAuthError(error);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
-    try {
-      const profile = await createOrUpdateProfile(session.user.id, email, name);
-      return {
-        user: profile,
-        session,
-      };
-    } catch (error) {
-      console.error('Error creating profile:', error);
-      throw new Error('Failed to create user profile');
+    if (!data.user) {
+      const errorMessage = 'No user data returned from sign up';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
+
+    // Create user profile
+    const profile = await createOrUpdateProfile(data.user.id, email, name);
+
+    toast.success('Successfully signed up! Please check your email to confirm your account.');
+    return {
+      user: profile,
+      session: data.session,
+    };
   } catch (error) {
-    console.error('Error signing up:', error);
-    if (error instanceof AuthError) {
-      throw new Error(handleAuthError(error));
-    }
+    console.error('Error in signUp:', error);
     throw error;
   }
 };
 
 export const signOut = async (): Promise<void> => {
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) {
+    toast.error('Error signing out');
+    throw error;
+  }
+  toast.success('Successfully signed out');
 };

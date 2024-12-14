@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LuxuryItem } from '../types';
 import LuxuryItemCard from './LuxuryItemCard';
 
@@ -17,6 +17,13 @@ const ItemGrid: React.FC<ItemGridProps> = ({
   onToggleFavorite,
   loading 
 }) => {
+  // Store items in localStorage when they change
+  useEffect(() => {
+    items.forEach(item => {
+      localStorage.setItem(`item-${item.id}`, JSON.stringify(item));
+    });
+  }, [items]);
+
   if (items.length === 0 && !loading) {
     return (
       <div className="text-center text-gray-500 py-12">

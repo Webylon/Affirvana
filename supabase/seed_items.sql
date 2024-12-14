@@ -57,4 +57,39 @@ SELECT
   'Rare pink diamond necklace with platinum setting',
   4.8,
   19
-;
+UNION ALL
+SELECT
+  'Chanel Classic Flap Bag',
+  6000,
+  'https://images.unsplash.com/photo-1556742031-c701a8b1d7a6?w=800',
+  (SELECT id FROM category_ids WHERE name = 'Fashion'),
+  'Iconic handbag crafted from premium leather.',
+  4.9,
+  25
+UNION ALL
+SELECT
+  'Rolex Submariner',
+  8500,
+  'https://images.unsplash.com/photo-1575936123456-0e8b9d0c5e5a?w=800',
+  (SELECT id FROM category_ids WHERE name = 'Fashion'),
+  'Classic dive watch with a timeless design.',
+  5.0,
+  15
+UNION ALL
+SELECT
+  'iPhone 14 Pro Max',
+  1099,
+  'https://images.unsplash.com/photo-1631289012854-6f1d1b3b4e8c?w=800',
+  (SELECT id FROM category_ids WHERE name = 'Gadgets'),
+  'Latest smartphone with advanced features.',
+  4.8,
+  40
+UNION ALL
+SELECT
+  'MacBook Pro 16-inch',
+  2499,
+  'https://images.unsplash.com/photo-1612833608835-2c8f2e5e9d3d?w=800',
+  (SELECT id FROM category_ids WHERE name = 'Gadgets'),
+  'Powerful laptop for professionals.',
+  4.7,
+  30;

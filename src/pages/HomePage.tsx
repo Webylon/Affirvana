@@ -4,10 +4,11 @@ import CategoryNav from '../components/CategoryNav';
 import ItemGrid from '../components/ItemGrid';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { fetchPixabayImages } from '../services/api/pixabayApi';
-import { LuxuryItem, Category } from '../types';
+import { LuxuryItem, Category } from '../types/types';
 import { useFavorites } from '../context/FavoritesContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useLoadingDelay } from '../hooks/useLoadingDelay';
+import toast from 'react-hot-toast';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -36,9 +37,19 @@ const HomePage: React.FC = () => {
         setHasMore(false);
       }
 
+      if (newItems.length === 0 && pageNum === 1) {
+        toast.error('No items found. Try a different search term.');
+        return;
+      }
+
       setItems(prev => reset ? newItems : [...prev, ...newItems]);
+      
+      if (reset && newItems.length > 0) {
+        toast.success(`Found ${newItems.length} luxury items`);
+      }
     } catch (error) {
       console.error('Error loading items:', error);
+      toast.error('Failed to load items. Please try again.');
       setHasMore(false);
     } finally {
       setLoading(false);

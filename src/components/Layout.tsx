@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Navigation from './Navigation';
+import LoadingPage from './LoadingPage';
 
 const Layout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,7 +40,9 @@ const Layout: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 min-h-[calc(100vh-4rem)] w-full max-w-[1920px] mx-auto">
           <div className="h-full px-4 lg:px-6">
-            <Outlet />
+            <Suspense fallback={<LoadingPage />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>
