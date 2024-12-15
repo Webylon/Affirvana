@@ -4,36 +4,47 @@ import { useBalance } from '../../context/BalanceContext';
 import { formatBalance } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { getCurrentUser } from '../../services/auth/supabaseAuth';
+import toast from 'react-hot-toast';
 
 const ProfileHeader: React.FC = () => {
   const { balance } = useBalance();
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [displayName, setDisplayName] = useState(user?.name || 'Guest User');
-  const [tempName, setTempName] = useState(displayName);
+  const [displayName, setDisplayName] = useState('');
+  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
-    if (user?.name) {
-      setDisplayName(user.name);
-      setTempName(user.name);
-    }
-  }, [user?.name]);
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        const currentUser = await getCurrentUser();
+        if (currentUser?.name) {
+          setDisplayName(currentUser.name);
+          setTempName(currentUser.name);
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user?.id]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || !tempName.trim()) return;
 
     try {
       const { error } = await supabase
         .from('users')
-        .update({ name: tempName })
+        .update({ name: tempName.trim() })
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setDisplayName(tempName);
+      setDisplayName(tempName.trim());
       setIsEditing(false);
+      toast.success('Name updated successfully');
     } catch (error) {
       console.error('Error updating name:', error);
+      toast.error('Failed to update name');
       // Revert to original name on error
       setTempName(displayName);
       setIsEditing(false);
@@ -53,7 +64,7 @@ const ProfileHeader: React.FC = () => {
             {user?.avatar ? (
               <img
                 src={user.avatar}
-                alt={displayName}
+                alt={displayName || 'User avatar'}
                 className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
@@ -70,11 +81,13 @@ const ProfileHeader: React.FC = () => {
                     onChange={(e) => setTempName(e.target.value)}
                     className="text-2xl font-bold text-gray-900 border-b-2 border-purple-600 focus:outline-none"
                     autoFocus
+                    placeholder="Enter your name"
                   />
                   <button
                     onClick={handleSave}
                     className="p-1 hover:bg-purple-50 rounded-full"
                     title="Save"
+                    disabled={!tempName.trim()}
                   >
                     <Check size={20} className="text-green-600" />
                   </button>
@@ -88,7 +101,9 @@ const ProfileHeader: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {displayName || 'Guest User'}
+                  </h1>
                   {user && (
                     <button
                       onClick={() => setIsEditing(true)}
@@ -101,12 +116,11 @@ const ProfileHeader: React.FC = () => {
                 </>
               )}
             </div>
-            <p className="text-gray-500">{user?.email || 'guest@example.com'}</p>
+            <p className="text-sm text-gray-500">{user?.email}</p>
+            <p className="mt-1 text-lg font-medium text-purple-600">
+              Balance: {formatBalance(balance)}
+            </p>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Available Balance</p>
-          <p className="text-2xl font-bold text-purple-600">{formatBalance(balance)}</p>
         </div>
       </div>
     </div>

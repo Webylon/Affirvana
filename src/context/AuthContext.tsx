@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '../types/auth';
+import { User, Session, AuthResponse } from '../types/auth';
 import { signIn, signUp, signOut, getCurrentUser } from '../services/auth/supabaseAuth';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -19,18 +20,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const updateUserAndSession = async (session: Session | null) => {
+    try {
+      if (session) {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        setSession(session);
+      } else {
+        setUser(null);
+        setSession(null);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Error updating user information');
+    }
+  };
+
   useEffect(() => {
     // Initialize auth state
     const initAuth = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
-          const { data: { session } } = await supabase.auth.getSession();
-          setSession(session);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        await updateUserAndSession(session);
       } catch (error) {
         console.error('Error initializing auth:', error);
+        toast.error('Error initializing authentication');
       } finally {
         setLoading(false);
       }
@@ -41,18 +55,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session);
+      setLoading(true);
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
-        setSession(session);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setSession(null);
-      } else if (event === 'USER_UPDATED') {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
-        setSession(session);
+      try {
+        switch (event) {
+          case 'SIGNED_IN':
+          case 'TOKEN_REFRESHED':
+          case 'USER_UPDATED':
+            await updateUserAndSession(session);
+            break;
+          case 'SIGNED_OUT':
+            setUser(null);
+            setSession(null);
+            toast.success('Successfully signed out!');
+            break;
+          default:
+            console.log('Unhandled auth event:', event);
+        }
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
+        toast.error('Error updating authentication state');
+      } finally {
+        setLoading(false);
       }
     });
 
@@ -64,9 +88,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { user: newUser, session: newSession } = await signIn(email, password);
-      setUser(newUser);
-      setSession(newSession);
+      const response = await signIn(email, password);
+      
+      if (response.error) {
+        toast.error(response.error);
+        return response;
+      }
+      
+      if (response.user) {
+        setUser(response.user);
+        setSession(response.session);
+        toast.success('Successfully signed in!');
+      }
+      
+      return response;
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      toast.error(error.message || 'Failed to sign in');
+      return {
+        user: null,
+        session: null,
+        error: error.message || 'Failed to sign in'
+      };
     } finally {
       setLoading(false);
     }
@@ -75,25 +118,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignUp = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      const { user: newUser, session: newSession, error } = await signUp(email, password, name);
-      if (error) {
-        throw new Error(error);
-      }
-      setUser(newUser);
-      setSession(newSession);
+      const response = await signUp(email, password, name);
+      return response;
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      return { error: error.message };
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignOut = async () => {
-    setLoading(true);
     try {
       await signOut();
       setUser(null);
       setSession(null);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast.error('Error signing out');
     }
   };
 
@@ -106,11 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: handleSignOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

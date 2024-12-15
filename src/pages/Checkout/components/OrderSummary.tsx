@@ -7,8 +7,9 @@ interface OrderSummaryProps {
   total: number;
 }
 
-const TAX_RATE = 0.08; // 8% tax rate
-const LUXURY_TAX_RATE = 0.02; // 2% luxury tax for items over $10,000
+const TAX_RATE = 0.08; // 8% sales tax
+const LUXURY_THRESHOLD = 1000; // $1000 threshold for luxury tax
+const LUXURY_TAX_RATE = 0.02; // 2% luxury tax
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({ items, total }) => {
   // Calculate shipping (free for now)
@@ -20,7 +21,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ items, total }) => {
   // Calculate luxury tax for eligible items
   const luxuryTax = items.reduce((acc, item) => {
     const itemTotal = item.price * item.quantity;
-    return acc + (itemTotal > 10000 ? itemTotal * LUXURY_TAX_RATE : 0);
+    return acc + (itemTotal > LUXURY_THRESHOLD ? itemTotal * LUXURY_TAX_RATE : 0);
   }, 0);
 
   // Calculate final total

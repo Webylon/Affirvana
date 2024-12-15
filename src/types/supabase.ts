@@ -6,197 +6,246 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       categories: {
         Row: {
+          created_at: string
+          description: string
+          icon: string
           id: string
           name: string
-          icon: string
-          description: string
-          created_at: string
         }
         Insert: {
+          created_at?: string
+          description: string
+          icon: string
           id?: string
           name: string
-          icon: string
-          description: string
-          created_at?: string
         }
         Update: {
-          id?: string
-          name?: string
+          created_at?: string
+          description?: string
           icon?: string
-          description?: string
-          created_at?: string
-        }
-      }
-      luxury_items: {
-        Row: {
-          id: string
-          title: string
-          price: number
-          image: string
-          category_id: string
-          description: string
-          rating: number | null
-          rating_count: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          price: number
-          image: string
-          category_id: string
-          description: string
-          rating?: number | null
-          rating_count?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          price?: number
-          image?: string
-          category_id?: string
-          description?: string
-          rating?: number | null
-          rating_count?: number | null
-          created_at?: string
-        }
-      }
-      users: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          avatar: string | null
-          currency: string
-          notifications: boolean
-          theme: string
-          created_at: string
-        }
-        Insert: {
-          id: string
-          name: string
-          email: string
-          avatar?: string | null
-          currency?: string
-          notifications?: boolean
-          theme?: string
-          created_at?: string
-        }
-        Update: {
           id?: string
           name?: string
-          email?: string
-          avatar?: string | null
-          currency?: string
-          notifications?: boolean
-          theme?: string
-          created_at?: string
         }
+        Relationships: []
       }
       favorites: {
         Row: {
-          id: string
-          user_id: string
-          item_id: string
           created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          item_id: string
+          price: number
+          title: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          item_id: string
           created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          item_id: string
+          price: number
+          title: string
+          user_id: string
         }
         Update: {
+          created_at?: string
+          description?: string | null
           id?: string
-          user_id?: string
+          image_url?: string
           item_id?: string
-          created_at?: string
+          price?: number
+          title?: string
+          user_id?: string
         }
+        Relationships: []
       }
-      purchases: {
+      luxury_items: {
         Row: {
-          id: string
-          user_id: string
-          date: string
-          total: number
-          subtotal: number
-          sales_tax: number
-          luxury_tax: number
-          shipping: number
-          first_name: string
-          last_name: string
-          address: string
-          city: string
-          state: string
-          zip_code: string
+          category_id: string
           created_at: string
+          description: string
+          id: string
+          image: string
+          price: number
+          rating: number | null
+          rating_count: number | null
+          title: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          date: string
-          total: number
-          subtotal: number
-          sales_tax: number
-          luxury_tax: number
-          shipping: number
-          first_name: string
-          last_name: string
-          address: string
-          city: string
-          state: string
-          zip_code: string
+          category_id: string
           created_at?: string
+          description: string
+          id?: string
+          image: string
+          price: number
+          rating?: number | null
+          rating_count?: number | null
+          title: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          date?: string
-          total?: number
-          subtotal?: number
-          sales_tax?: number
-          luxury_tax?: number
-          shipping?: number
-          first_name?: string
-          last_name?: string
-          address?: string
-          city?: string
-          state?: string
-          zip_code?: string
+          category_id?: string
           created_at?: string
+          description?: string
+          id?: string
+          image?: string
+          price?: number
+          rating?: number | null
+          rating_count?: number | null
+          title?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "luxury_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_items: {
         Row: {
-          id: string
-          purchase_id: string
-          item_id: string
-          quantity: number
-          price_at_time: number
           created_at: string
+          id: string
+          item_id: string
+          price_at_time: number
+          purchase_id: string
+          quantity: number
         }
         Insert: {
-          id?: string
-          purchase_id: string
-          item_id: string
-          quantity: number
-          price_at_time: number
           created_at?: string
+          id?: string
+          item_id: string
+          price_at_time: number
+          purchase_id: string
+          quantity: number
         }
         Update: {
-          id?: string
-          purchase_id?: string
-          item_id?: string
-          quantity?: number
-          price_at_time?: number
           created_at?: string
+          id?: string
+          item_id?: string
+          price_at_time?: number
+          purchase_id?: string
+          quantity?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "luxury_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          date: string
+          first_name: string
+          id: string
+          last_name: string
+          luxury_tax: number
+          sales_tax: number
+          shipping: number
+          state: string
+          subtotal: number
+          total: number
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          date?: string
+          first_name: string
+          id?: string
+          last_name: string
+          luxury_tax: number
+          sales_tax: number
+          shipping: number
+          state: string
+          subtotal: number
+          total: number
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          date?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          luxury_tax?: number
+          sales_tax?: number
+          shipping?: number
+          state?: string
+          subtotal?: number
+          total?: number
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          currency: string
+          email: string
+          id: string
+          name: string
+          notifications: boolean
+          theme: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          currency?: string
+          email: string
+          id: string
+          name: string
+          notifications?: boolean
+          theme?: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          currency?: string
+          email?: string
+          id?: string
+          name?: string
+          notifications?: boolean
+          theme?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -208,5 +257,105 @@ export interface Database {
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type PublicSchema = Database[Extract<keyof Database, "public">]
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never

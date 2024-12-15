@@ -24,12 +24,22 @@ const SignUpPage: React.FC = () => {
   const onSubmit = async (data: SignUpForm) => {
     try {
       setError(null);
-      await signUp(data.email, data.password, data.name);
-      setSuccess(true);
-      // Show success message briefly before redirecting
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 1000);
+      const { error } = await signUp(data.email, data.password, data.name);
+      
+      if (!error) {
+        setSuccess(true);
+        // Show success message briefly before redirecting to login
+        setTimeout(() => {
+          navigate('/login', { 
+            replace: true,
+            state: { 
+              message: 'Account created successfully! Please sign in.' 
+            }
+          });
+        }, 2000);
+      } else {
+        setError(error.message);
+      }
     } catch (error: any) {
       setError(error.message);
     }

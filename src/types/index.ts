@@ -26,6 +26,15 @@ export interface CartItem extends LuxuryItem {
   quantity: number;
 }
 
+export interface ShippingDetails {
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
 export interface Purchase {
   id: string;
   date: Date;
@@ -35,14 +44,7 @@ export interface Purchase {
   salesTax: number;
   luxuryTax: number;
   shipping: number;
-  shippingDetails: {
-    firstName: string;
-    lastName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
+  shippingDetails: ShippingDetails;
 }
 
 export interface UserProfile {

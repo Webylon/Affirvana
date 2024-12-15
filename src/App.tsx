@@ -10,6 +10,7 @@ import LoadingPage from './components/LoadingPage';
 import PrivateRoute from './components/PrivateRoute';
 import LoginPage from './pages/auth/LoginPage';
 import SignUpPage from './pages/auth/SignUpPage';
+import AuthCallback from './pages/auth/AuthCallback';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 
@@ -31,10 +32,12 @@ function App() {
               <CartProvider>
                 <BoardProvider>
                   <Suspense fallback={<LoadingPage />}>
+                    <Toaster position="top-right" />
                     <Routes>
                       {/* Public Routes */}
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignUpPage />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
 
                       {/* Protected Routes */}
                       <Route
@@ -53,11 +56,10 @@ function App() {
                         <Route path="checkout" element={<CheckoutPage />} />
                       </Route>
 
-                      {/* Catch all - redirect to home */}
+                      {/* Catch all route */}
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>
-                  <Toaster position="top-right" />
                 </BoardProvider>
               </CartProvider>
             </FavoritesProvider>

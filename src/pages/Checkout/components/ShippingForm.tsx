@@ -1,21 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Truck } from 'lucide-react';
+import { ShippingDetails } from '../../../types';
 
 interface ShippingFormProps {
-  onSubmit: (details: any) => void;
+  onSubmit: (details: ShippingDetails) => void;
+  initialData?: ShippingDetails | null;
 }
 
-interface FormData {
-  firstName: string;
-  lastName: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
-
-const ShippingForm: React.FC<ShippingFormProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState<FormData>({
+const ShippingForm: React.FC<ShippingFormProps> = ({ onSubmit, initialData }) => {
+  const [formData, setFormData] = useState<ShippingDetails>({
     firstName: '',
     lastName: '',
     address: '',
@@ -24,39 +17,81 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ onSubmit }) => {
     zipCode: ''
   });
 
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ShippingDetails, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof ShippingDetails, boolean>>>({});
 
-  const validateForm = () => {
-    const newErrors: Partial<FormData> = {};
-    
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
-    if (!formData.address) newErrors.address = 'Address is required';
-    if (!formData.city) newErrors.city = 'City is required';
-    if (!formData.state) newErrors.state = 'State is required';
-    if (!formData.zipCode) newErrors.zipCode = 'ZIP code is required';
-    else if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode)) {
-      newErrors.zipCode = 'Invalid ZIP code format';
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
     }
+  }, [initialData]);
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validateField = (name: keyof ShippingDetails, value: string): string => {
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        return value.trim() ? '' : `${name === 'firstName' ? 'First' : 'Last'} name is required`;
+      case 'address':
+        return value.trim() ? '' : 'Address is required';
+      case 'city':
+        return value.trim() ? '' : 'City is required';
+      case 'state':
+        return value.trim() ? '' : 'State is required';
+      case 'zipCode':
+        return /^\d{5}(-\d{4})?$/.test(value) ? '' : 'Invalid ZIP code format (e.g., 12345 or 12345-6789)';
+      default:
+        return '';
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormData]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    
+    if (touched[name as keyof ShippingDetails]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: validateField(name as keyof ShippingDetails, value)
+      }));
     }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setErrors(prev => ({
+      ...prev,
+      [name]: validateField(name as keyof ShippingDetails, value)
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+
+    // Validate all fields
+    const newErrors: Partial<Record<keyof ShippingDetails, string>> = {};
+    let hasErrors = false;
+
+    (Object.keys(formData) as Array<keyof ShippingDetails>).forEach(key => {
+      const error = validateField(key, formData[key]);
+      if (error) {
+        newErrors[key] = error;
+        hasErrors = true;
+      }
+    });
+
+    setErrors(newErrors);
+    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+
+    if (!hasErrors) {
       onSubmit(formData);
     }
   };
+
+  const inputClasses = (fieldName: keyof ShippingDetails) =>
+    `mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm ${
+      errors[fieldName] && touched[fieldName] ? 'border-red-300' : ''
+    }`;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -66,122 +101,127 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ onSubmit }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              First name
             </label>
             <input
               type="text"
               name="firstName"
+              id="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-                errors.firstName ? 'border-red-500' : ''
-              }`}
+              onBlur={handleBlur}
+              className={inputClasses('firstName')}
             />
-            {errors.firstName && (
-              <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
+            {errors.firstName && touched.firstName && (
+              <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
             )}
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              Last name
             </label>
             <input
               type="text"
               name="lastName"
+              id="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-                errors.lastName ? 'border-red-500' : ''
-              }`}
+              onBlur={handleBlur}
+              className={inputClasses('lastName')}
             />
-            {errors.lastName && (
-              <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+            {errors.lastName && touched.lastName && (
+              <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Street Address
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+            Address
           </label>
           <input
             type="text"
             name="address"
+            id="address"
             value={formData.address}
             onChange={handleChange}
-            className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-              errors.address ? 'border-red-500' : ''
-            }`}
+            onBlur={handleBlur}
+            className={inputClasses('address')}
           />
-          {errors.address && (
-            <p className="mt-1 text-sm text-red-500">{errors.address}</p>
+          {errors.address && touched.address && (
+            <p className="mt-1 text-sm text-red-600">{errors.address}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+          <div className="sm:col-span-1">
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700">
               City
             </label>
             <input
               type="text"
               name="city"
+              id="city"
               value={formData.city}
               onChange={handleChange}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-                errors.city ? 'border-red-500' : ''
-              }`}
+              onBlur={handleBlur}
+              className={inputClasses('city')}
             />
-            {errors.city && (
-              <p className="mt-1 text-sm text-red-500">{errors.city}</p>
+            {errors.city && touched.city && (
+              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
             )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div className="sm:col-span-1">
+            <label htmlFor="state" className="block text-sm font-medium text-gray-700">
               State
             </label>
             <input
               type="text"
               name="state"
+              id="state"
               value={formData.state}
               onChange={handleChange}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-                errors.state ? 'border-red-500' : ''
-              }`}
+              onBlur={handleBlur}
+              className={inputClasses('state')}
             />
-            {errors.state && (
-              <p className="mt-1 text-sm text-red-500">{errors.state}</p>
+            {errors.state && touched.state && (
+              <p className="mt-1 text-sm text-red-600">{errors.state}</p>
             )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div className="sm:col-span-1">
+            <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">
               ZIP Code
             </label>
             <input
               type="text"
               name="zipCode"
+              id="zipCode"
               value={formData.zipCode}
               onChange={handleChange}
-              placeholder="12345"
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 ${
-                errors.zipCode ? 'border-red-500' : ''
-              }`}
+              onBlur={handleBlur}
+              className={inputClasses('zipCode')}
             />
-            {errors.zipCode && (
-              <p className="mt-1 text-sm text-red-500">{errors.zipCode}</p>
+            {errors.zipCode && touched.zipCode && (
+              <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>
             )}
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-        >
-          Save Shipping Details
-        </button>
+        <div>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <Truck className="mr-2 h-5 w-5" />
+            Continue to Payment
+          </button>
+        </div>
       </form>
     </div>
   );
