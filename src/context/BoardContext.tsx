@@ -85,7 +85,16 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         subtotal: subtotal,
         sales_tax: salesTax,
         luxury_tax: luxuryTax,
-        shipping_address: shippingAddress
+        shipping_address: shippingAddress,
+        // Add individual shipping fields
+        first_name: shippingDetails.firstName,
+        last_name: shippingDetails.lastName,
+        email: shippingDetails.email,
+        address: shippingDetails.address,
+        city: shippingDetails.city,
+        state: shippingDetails.state,
+        zip_code: shippingDetails.zipCode,
+        country: shippingDetails.country || 'Sweden'
       };
 
       console.log('Purchase data:', purchaseData); // Debug log
