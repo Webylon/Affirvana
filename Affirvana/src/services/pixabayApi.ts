@@ -1,0 +1,1 @@
+// Delete this duplicate file as we're using src/services/api/pixabayApi.ts
