@@ -1,1 +1,0 @@
-// Delete this file as we're using src/components/CategoryNav/index.tsx instead

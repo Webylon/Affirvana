@@ -1,1 +1,0 @@
-export const INITIAL_BALANCE = 2500000; // $2,500,000
