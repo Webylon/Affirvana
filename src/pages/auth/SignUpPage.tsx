@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Mail, Lock, User, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Toast } from '@/components/ui/Toast';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -13,9 +14,10 @@ const signUpSchema = z.object({
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
-const SignUpPage: React.FC = () => {
+export default function SignUpPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const { signUp } = useAuth();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>();
 
@@ -23,15 +25,25 @@ const SignUpPage: React.FC = () => {
     try {
       setError(null);
       await signUp(data.email, data.password, data.name);
-      navigate('/');
+      setShowSuccessToast(true);
     } catch (error: any) {
       console.error('Error signing up:', error);
-      setError(error.message);
+      setError(error.message || 'An error occurred during signup');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <Toast
+        isVisible={showSuccessToast}
+        message="Please check your email inbox to verify your account. Don't forget to check your spam folder!"
+        type="success"
+        onClose={() => {
+          setShowSuccessToast(false);
+          navigate('/login');
+        }}
+      />
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your account
@@ -126,7 +138,7 @@ const SignUpPage: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating account...' : 'Sign up'}
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </button>
             </div>
           </form>
@@ -134,6 +146,4 @@ const SignUpPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default SignUpPage;
+}

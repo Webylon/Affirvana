@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ScrollableContainerProps {
@@ -7,8 +7,11 @@ interface ScrollableContainerProps {
 
 const ScrollableContainer: React.FC<ScrollableContainerProps> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
-  const [canScrollRight, setCanScrollRight] = React.useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   const checkScroll = () => {
     if (containerRef.current) {
@@ -36,8 +39,39 @@ const ScrollableContainer: React.FC<ScrollableContainerProps> = ({ children }) =
     });
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - containerRef.current!.offsetLeft);
+    setScrollLeft(containerRef.current!.scrollLeft);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - containerRef.current!.offsetLeft);
+    setScrollLeft(containerRef.current!.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current!.offsetLeft;
+    const walk = (x - startX) * 2;
+    containerRef.current!.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX - containerRef.current!.offsetLeft;
+    const walk = (x - startX) * 2;
+    containerRef.current!.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
-    <div className="relative">
+    <div className="relative px-4">
       {/* Left scroll button */}
       <button
         onClick={() => scroll('left')}
@@ -53,9 +87,17 @@ const ScrollableContainer: React.FC<ScrollableContainerProps> = ({ children }) =
       <div
         ref={containerRef}
         onScroll={checkScroll}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleDragEnd}
         className="overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
-        <div className="flex gap-4 px-4 py-2">
+        <div className="flex gap-4 py-2">
           {children}
         </div>
       </div>
@@ -73,3 +115,5 @@ const ScrollableContainer: React.FC<ScrollableContainerProps> = ({ children }) =
     </div>
   );
 };
+
+export default ScrollableContainer;

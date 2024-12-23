@@ -11,7 +11,6 @@ import LoadingPage from './components/LoadingPage';
 import PrivateRoute from './components/PrivateRoute';
 import LoginPage from './pages/auth/LoginPage';
 import SignUpPage from './pages/auth/SignUpPage';
-import { useAuth } from './context/AuthContext';
 
 // Lazy load pages
 const HomePage = React.lazy(() => import('./pages/HomePage'));
@@ -20,12 +19,6 @@ const Favorites = React.lazy(() => import('./pages/Favorites'));
 const Board = React.lazy(() => import('./pages/Board'));
 const ProfilePage = React.lazy(() => import('./pages/Profile/ProfilePage'));
 const CheckoutPage = React.lazy(() => import('./pages/Checkout/CheckoutPage'));
-
-// AuthWrapper component to handle authenticated routes
-const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  return user ? <Navigate to="/" /> : <>{children}</>;
-};
 
 function App() {
   return (
@@ -37,20 +30,10 @@ function App() {
               <Router>
                 <AnimatePresence mode="wait">
                   <Routes>
-                    {/* Public Auth Routes */}
-                    <Route path="/login" element={
-                      <AuthWrapper><LoginPage /></AuthWrapper>
-                    } />
-                    <Route path="/signup" element={
-                      <AuthWrapper><SignUpPage /></AuthWrapper>
-                    } />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignUpPage />} />
 
-                    {/* Protected Routes */}
-                    <Route path="/" element={
-                      <PrivateRoute>
-                        <Layout />
-                      </PrivateRoute>
-                    }>
+                    <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
                       <Route index element={
                         <Suspense fallback={<LoadingPage />}>
                           <HomePage />
@@ -83,7 +66,6 @@ function App() {
                       } />
                     </Route>
 
-                    {/* Catch all redirect to login */}
                     <Route path="*" element={<Navigate to="/login" replace />} />
                   </Routes>
                 </AnimatePresence>

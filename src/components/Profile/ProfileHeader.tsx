@@ -19,7 +19,7 @@ const ProfileHeader: React.FC = () => {
         setDisplayName(tempName);
       } catch (error) {
         console.error('Failed to update name:', error);
-        setTempName(displayName); // Reset on error
+        setTempName(displayName);
       }
     }
     setIsEditing(false);
@@ -31,21 +31,22 @@ const ProfileHeader: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* User Info Section */}
         <div className="flex items-center space-x-4">
-          <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center">
-            <User size={40} className="text-purple-600" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+            <User size={32} className="text-purple-600" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               {isEditing ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={tempName}
                     onChange={(e) => setTempName(e.target.value)}
-                    className="text-2xl font-bold text-gray-900 border-b-2 border-purple-600 focus:outline-none"
+                    className="text-xl sm:text-2xl font-bold text-gray-900 border-b-2 border-purple-600 focus:outline-none max-w-[200px]"
                     autoFocus
                   />
                   <button
@@ -65,7 +66,9 @@ const ProfileHeader: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                    {displayName}
+                  </h1>
                   <button
                     onClick={() => setIsEditing(true)}
                     className="p-1 hover:bg-purple-50 rounded-full"
@@ -76,12 +79,16 @@ const ProfileHeader: React.FC = () => {
                 </>
               )}
             </div>
-            <p className="text-gray-500">{user?.email}</p>
+            <p className="text-gray-500 truncate">{user?.email}</p>
           </div>
         </div>
-        <div className="text-right">
+
+        {/* Balance Section */}
+        <div className="flex-shrink-0 bg-purple-50 rounded-lg px-4 py-2 sm:text-right">
           <p className="text-sm text-gray-500">Available Balance</p>
-          <p className="text-2xl font-bold text-purple-600">{formatBalance(balance)}</p>
+          <p className="text-lg sm:text-2xl font-bold text-purple-600">
+            {formatBalance(balance)}
+          </p>
         </div>
       </div>
     </div>
